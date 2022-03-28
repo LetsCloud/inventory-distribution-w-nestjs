@@ -1,0 +1,120 @@
+version: "3"
+services:
+  gateway:
+    build: ./gateway-service
+    container_name: gateway-service_c
+    environment:
+      - GATEWAY_PORT=3000
+      - RESERVATION_URL=http://reservation:3001
+      - RESERVATION_PORT=3001
+      - RESERVATION_TCP_HOST=reservation
+      - RESERVATION_TCP_PORT=3091
+      - RESERVATION_MONGODB_URL=mongodb://mongo:27017/reservation
+      - INVENTORY_TCP_HOST=inventory
+      - INVENTORY_TCP_PORT=3092
+      - INVENTORY_MONGODB_URL=mongodb://mongo:27017/inventory
+      - SAGA_TCP_HOST=saga
+      - SAGA_TCP_PORT=3093
+    depends_on:
+      - reservation
+    ports:
+      - "3000:3000"
+    networks:
+      - mern-app
+    volumes:
+      - ./gateway-service:/app
+      - ./gateway-service/node_modules:/app/node_modules
+
+  reservation:
+    build: ./reservation-service
+    container_name: reservation-service_c
+    environment:
+      - GATEWAY_PORT=3000
+      - RESERVATION_URL=http://reservation:3001
+      - RESERVATION_PORT=3001
+      - RESERVATION_TCP_HOST=reservation
+      - RESERVATION_TCP_PORT=3091
+      - RESERVATION_MONGODB_URL=mongodb://mongo:27017/reservation
+      - INVENTORY_TCP_HOST=inventory
+      - INVENTORY_TCP_PORT=3092
+      - INVENTORY_MONGODB_URL=mongodb://mongo:27017/inventory
+      - SAGA_TCP_HOST=saga
+      - SAGA_TCP_PORT=3093
+    ports:
+      - "3001:3001"
+      - "3091:3091"
+    networks:
+      - mern-app
+    depends_on:
+      - saga
+      - mongo
+    volumes:
+      - ./reservation-service:/app
+      - ./reservation-service/node_modules:/app/node_modules
+
+  inventory:
+    build: ./inventory-service
+    container_name: inventory-service_c
+    environment:
+      - GATEWAY_PORT=3000
+      - RESERVATION_URL=http://reservation:3001
+      - RESERVATION_PORT=3001
+      - RESERVATION_TCP_HOST=reservation
+      - RESERVATION_TCP_PORT=3091
+      - RESERVATION_MONGODB_URL=mongodb://mongo:27017/reservation
+      - INVENTORY_TCP_HOST=inventory
+      - INVENTORY_TCP_PORT=3092
+      - INVENTORY_MONGODB_URL=mongodb://mongo:27017/inventory
+      - SAGA_TCP_HOST=saga
+      - SAGA_TCP_PORT=3093
+    ports:
+      - "3092:3092"
+    networks:
+      - mern-app
+    depends_on:
+      - saga
+      - mongo
+    volumes:
+      - ./inventory-service:/app
+      - ./inventory-service/node_modules:/app/node_modules
+
+  saga:
+    build: ./saga-service
+    container_name: saga-service_c
+    environment:
+      - GATEWAY_PORT=3000
+      - RESERVATION_URL=http://reservation:3001
+      - RESERVATION_PORT=3001
+      - RESERVATION_TCP_HOST=reservation
+      - RESERVATION_TCP_PORT=3091
+      - RESERVATION_MONGODB_URL=mongodb://mongo:27017/reservation
+      - INVENTORY_TCP_HOST=inventory
+      - INVENTORY_TCP_PORT=3092
+      - INVENTORY_MONGODB_URL=mongodb://mongo:27017/inventory
+      - SAGA_TCP_HOST=saga
+      - SAGA_TCP_PORT=3093
+    ports:
+      - "3093:3093"
+    networks:
+      - mern-app
+    volumes:
+      - ./saga-service:/app
+      - ./saga-service/node_modules:/app/node_modules
+
+  mongo:
+    container_name: mongo
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    networks:
+      - mern-app
+    volumes:
+      - mongo-data:/data/db
+
+networks:
+  mern-app:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
